@@ -1,0 +1,29 @@
+default_platform(:android)
+
+platform :android do
+  desc "Distribute Android through Firebase App Distribution"
+  lane :deploy_alpha do |options|
+    firebase_app_distribution(
+       app: "#{options[:app_id]}",
+       groups: "testers",
+       android_artifact_type: "APK",
+       android_artifact_path: "#{options[:aab_path]}",
+       firebase_cli_token: "#{options[:firebase_token]}"
+    )
+  end
+
+#   desc "Deploy a new version to the Google Play"
+#   lane :deploy_production do |options|
+#     begin
+#       upload_to_play_store(
+#         track: 'beta',
+#         aab: "#{options[:aab_path]}",
+#         rollout: '1.0'
+#       )
+#     rescue => exception
+#       raise exception unless exception.message.include?('apkUpgradeVersionConflict')
+#       puts 'Current version already present on the Play Store. Omitting this upload.'
+#     end
+#   end
+
+end

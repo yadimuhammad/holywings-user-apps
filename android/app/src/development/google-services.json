@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "708405753831",
+    "project_id": "holywings-dev",
+    "storage_bucket": "holywings-dev.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:708405753831:android:fd50498bec1ad008c02f42",
+        "android_client_info": {
+          "package_name": "holywings.id.android.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "708405753831-mdaticvbpt1ehavi0ifk8ieb74rfvoeu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUAp-vtBOjl1T9Eff68In2Ym9Ok4sv0jw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "708405753831-mdaticvbpt1ehavi0ifk8ieb74rfvoeu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "708405753831-klug6jhmgj60fvloej2ruvc5s7elok4h.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.holywingsindonesia.ios-dev"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

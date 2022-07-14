@@ -1,0 +1,78 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:ios)
+platform :ios do
+  before_all do
+    setup_circle_ci
+  end
+
+  lane :prod do
+    increment_build_number
+
+    match(type: "appstore", 
+          readonly: true,
+          app_identifier: "com.holywingsindonesia.ios")
+
+    match(type: "appstore", 
+          readonly: true,
+          app_identifier: "com.holywingsindonesia.ios.ImageNotification")
+
+    sync_code_signing(type: "appstore",
+                      app_identifier: "com.holywingsindonesia.ios",
+                      readonly: true)
+
+    gym(scheme: "production", 
+        workspace: "Runner.xcworkspace", 
+        export_method: "app-store", 
+        configuration: "Release-production", 
+        clean: true, 
+        output_directory: "build",
+        export_options: {
+          method: "production",
+          signingStyle: "manual",
+          provisioningProfiles: {"com.holywingsindonesia.ios": "match AppStore com.holywingsindonesia.ios"}, 
+        })
+
+    testflight(ipa: "build/Runner.ipa", 
+              skip_waiting_for_build_processing: true,
+              username: "santoso.marcellinus@outlook.com",
+              apple_id: "1477590019")
+  end
+
+  lane :dev do
+    increment_build_number
+    
+    match(type: "adhoc", 
+          readonly: true,
+          app_identifier: "com.holywingsindonesia.ios.dev")
+
+    match(type: "appstore", 
+          readonly: true,
+          app_identifier: "com.holywingsindonesia.ios.dev.ImageNotification")
+
+    sync_code_signing(type: "adhoc",
+                      app_identifier: "com.holywingsindonesia.ios.dev",
+                      readonly: true)
+
+    gym(scheme: "development", 
+        workspace: "Runner.xcworkspace", 
+        export_method: "ad-hoc", 
+        configuration: "Release-development", 
+        clean: true, 
+        output_directory: "build")
+  end
+end
+

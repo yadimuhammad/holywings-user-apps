@@ -1,0 +1,88 @@
+{
+  "project_info": {
+    "project_number": "757502401311",
+    "firebase_url": "https://holywings-f3b18.firebaseio.com",
+    "project_id": "holywings-f3b18",
+    "storage_bucket": "holywings-f3b18.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:757502401311:android:08072e1387dcadfb952e2a",
+        "android_client_info": {
+          "package_name": "holywings.id.android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "757502401311-2adqenu9mqkj9cepf4spe3ocarf595ln.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "holywings.id.android",
+            "certificate_hash": "ee4d2e3a0addb9ecbab854bf3ebc4554f366d56f"
+          }
+        },
+        {
+          "client_id": "757502401311-6ci19830f274ieftdssasdqolvaq7dsc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "holywings.id.android",
+            "certificate_hash": "0201021a1748c1d98b9f168fe874c242237f1c01"
+          }
+        },
+        {
+          "client_id": "757502401311-gsih38fjfq1om8bgitochq0bc1khtjt5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "holywings.id.android",
+            "certificate_hash": "4b86e39b970c6958adae887df4e6f402593d996f"
+          }
+        },
+        {
+          "client_id": "757502401311-ljnmpqen48n8neuc970hd42adhnt6eq7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "holywings.id.android",
+            "certificate_hash": "c672fad70efeb6a312bf41c7bd86d786e1439d02"
+          }
+        },
+        {
+          "client_id": "757502401311-qon11loetd29e8knki0cjlprah473617.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "holywings.id.android",
+            "certificate_hash": "a501b95ef78e0a55354d787d3cca0c3fd750d5dd"
+          }
+        },
+        {
+          "client_id": "757502401311-gblp3h8qg7rrfl86l8sv6p2nfomsagqq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkBY2GwCmL86oRiTmEFfAWypfI9dBGbX0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "757502401311-gblp3h8qg7rrfl86l8sv6p2nfomsagqq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "757502401311-gettd67vh7t191gvba7jjt80n9mje5n9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.holywings.booking-management.ios",
+                "app_store_id": "1488415134"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

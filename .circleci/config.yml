@@ -1,0 +1,221 @@
+version: 2.1
+orbs: 
+  android: circleci/android@2.0.0
+  slack: circleci/slack@4.5.1
+  macos: circleci/macos@2.0.1
+  
+parameters:
+  flutter_version:
+    type: string
+    default: "2.10.4"
+  xcode_version:
+    type: string
+    default: "13.3.0"
+  flutter_download_url:
+    type: string
+    default: "https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_2.5.1-stable.zip"
+
+executors:
+  cirrusci:
+    docker:
+      - image: cirrusci/flutter:<< pipeline.parameters.flutter_version >>
+  ios-flutter:
+    macos:
+      xcode: << pipeline.parameters.xcode_version >>
+    environment:
+      FL_OUTPUT_DIR: output
+
+commands: 
+  android_setup:
+    steps:
+      - checkout
+      - run:
+          name: Keystore variables
+          command: |
+            echo "$ANDROID_PLAY_CONSOLE" | base64 --decode > "android/playstore.json"
+            echo "$ANDROID_UPLOAD_KEY" | base64 --decode > "android/app/holywings_keystore.jks"
+            echo "$ANDROID_KEY_PROPERTIES" | base64 --decode > "android/key.properties"
+            echo "$ENV_PROD" | base64 --decode > ".env"
+            echo "$ENV_DEV" | base64 --decode > ".dev.env"
+
+  fastlane_setup_android:
+    steps:
+      - restore_cache:
+          key: 1-android-gems-{{ checksum "android/Gemfile.lock" }}
+      - run:
+          name: Configure Fastlane Android
+          command: |
+            gem install bundler
+            cd android
+            bundle check || bundle install
+            bundle update fastlane
+            fastlane add_plugin firebase_app_distribution
+      - run:
+          name: Install Firebase CLI
+          command: |
+            curl -sL firebase.tools | bash
+      - save_cache:
+          key: 1-android-gems-{{ checksum "android/Gemfile.lock" }}
+          paths:
+            - android/vendor/bundle
+
+  ios_setup:
+    steps:
+      - checkout
+      - restore_cache:
+          key: flutter-cache-<< pipeline.parameters.flutter_version >>-ios-bin
+      - run:
+          name: download flutter SDK
+          command: if ! test -d "flutter"; then curl -o flutter_sdk.zip << pipeline.parameters.flutter_download_url >>; fi
+      - run:
+          name: unzip flutter SDK
+          command: if test -f "flutter_sdk.zip"; then unzip flutter_sdk.zip; fi
+      - run:
+          name: export flutter path
+          command: echo 'export PATH="$PATH:`pwd`/flutter/bin"'  >> $BASH_ENV
+      - save_cache:
+          key: flutter-cache-<< pipeline.parameters.flutter_version >>-ios-bin
+          paths:
+            - flutter
+
+  fastlane_setup_ios:
+    steps:
+      - restore_cache:
+          key: 1-ios-gems-{{ checksum "ios/Gemfile.lock" }}
+      - run:
+          name: Configure Fastlane iOS
+          command: |
+            gem install bundler:2.2.26
+            cd ios
+            bundle check || bundle install
+            bundle update fastlane
+      - run:
+          name: Install Firebase CLI
+          command: |
+            curl -sL firebase.tools | bash
+      - save_cache:
+          key: 1-ios-gems-{{ checksum "ios/Gemfile.lock" }}
+          paths:
+            - ios/vendor/bundle           
+
+workflows:
+  version: 2
+  distribute-android-dev:
+    jobs:
+      - distribute-android-dev:
+          filters:
+            branches:
+              only: master
+
+  distribute-android-prod:
+    jobs:
+      - distribute-android-prod: 
+          filters:
+            branches:
+              only: deployment
+
+  distribute-ios-prod:
+    jobs:
+      - distribute-ios-prod:
+          filters:
+            branches:
+              only: deployment
+jobs:
+  distribute-android-dev:
+    docker:
+      - image: cirrusci/flutter:<< pipeline.parameters.flutter_version >>
+    steps:
+      - android_setup
+      - fastlane_setup_android
+      - run:
+          name: Build Android APK
+          command: flutter build apk --release --target lib/main_development.dart --flavor=development
+      - store_artifacts:
+          path: build/app/outputs/flutter-apk/app-development-release.apk
+      - run:
+          name: Upload to Android build to Firebase
+          command: |
+            cd android
+            bundle exec fastlane deploy_alpha app_id:${PROJECT_FIREBASE_ANDROID_APP_ID_DEV} aab_path:"../build/app/outputs/flutter-apk/app-development-release.apk" firebase_token:$PROJECT_FIREBASE_TOKEN
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+      - slack/notify:
+          event: pass
+          template: basic_success_1
+          mentions: '@here'  
+
+  distribute-android-prod:
+    docker:
+      - image: cirrusci/flutter:<< pipeline.parameters.flutter_version >>
+    steps:
+      - android_setup
+      - fastlane_setup_android
+      - run:
+          name: Build Android APK
+          command: flutter build apk --release --target lib/main_production.dart --flavor=production
+      - store_artifacts:
+          path: build/app/outputs/flutter-apk/app-production-release.apk
+      - run:
+          name: Download PlayStore resources
+          command: |
+            pwd
+            cd android
+            ls
+            fastlane supply init
+      - run:
+          name: Upload to Android build to Firebase
+          command: |
+            cd android
+            bundle exec fastlane deploy_alpha app_id:${PROJECT_FIREBASE_ANDROID_APP_ID} aab_path:"../build/app/outputs/flutter-apk/app-production-release.apk" firebase_token:$PROJECT_FIREBASE_TOKEN
+      - run:
+          name: Upload to PlayStore
+          command: |
+            pwd
+            cd android
+            bundle exec fastlane supply --apk ../build/app/outputs/flutter-apk/app-production-release.apk --track beta --rollout 1
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+      - slack/notify:
+          event: pass
+          template: basic_success_1
+          mentions: '@here'  
+    
+  distribute-ios-prod:
+    executor: ios-flutter
+    steps:
+      - ios_setup
+      - fastlane_setup_ios
+      - run:
+          name: Production variables
+          command: |
+            echo "$ENV_PROD" | base64 --decode > ".env"
+            echo "$ENV_DEV" | base64 --decode > ".dev.env"
+      - run:
+          name: Build iOS Production App
+          command: |
+            flutter clean && flutter pub get && cd ios && rm Podfile.lock && pod install && cd ..
+      - run:
+          name: Replace ShareMe file
+          command: |
+            echo "$SwiftFlutterShareMePlugin" | base64 --decode > "/Users/distiller/project/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_share_me-1.2.0/ios/Classes/SwiftFlutterShareMePlugin.swift"
+        # cp SwiftFlutterShareMePlugin.swift /Users/distiller/project/flutter/.pub-cache/hosted/pub.dartlang.org/flutter_share_me-1.2.0/ios/Classes/            
+      - run:
+          name: Build and Upload iOS Archive IPA
+          command: |
+            cd ios
+            bundle exec fastlane prod
+      - store_artifacts:
+          path: ios/output/gym/Runner.ipa
+      - store_artifacts:
+          path: ios/output/gym/Runner.app.dSYM.zip
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+      - slack/notify:
+          event: pass
+          template: basic_success_1
+          mentions: '@here'  
+
+  
